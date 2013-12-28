@@ -1,23 +1,40 @@
-/**
- * Represents a move in a game
- */
-public class NimMove extends GameMove{
+public class UCT {
 
-    private int numChipsRemoved;
-
-    public NimMove(int num){
-        numChipsRemoved = num;
-    }
-
-    public int getNumChips(){
-        return numChipsRemoved;
-    }
-    
-    /**
-     * Return a string representation of the move
+    /*
+     * Conduct a UCT search for maxIter iterations starting from root state.
+     * return the best move from root state.
      */
-    public String toString(){
-        return "Number of chips removed: " + Integer.toString(numChipsRemoved);
+    public static findMove(GameState rootState, int maxIter){
+
+        Node rootNode = (null, null, rootState);
+        Node curNode;
+        GameState curState;
+
+        for(int i = 0; i < maxIter; i++){
+            curNode = rootNode;
+            curState = rootState.clone();
+
+            //Select
+            while(curNode.getUntriedMoves().isEmpty() && !curNode.getChildNodes().isEmpty()){
+                curNode = curNode.UCTSelectChild();
+                curState.doMove(curNode.getMove());
+            }
+
+            //Expand
+            curState = curNode.expand(curState);
+
+            //Rollout
+            curState.rollOut();
+
+            //Backpropagate
+            while(curNode != null){
+                curNode.update(curState.GetResult(curNode.getPlayerJustMoved()));
+                curNode = curNode.getParent();
+            }
+        }
+
+        return rootNode.getMostVisitedChild().getMove();
+
     }
 
 }
