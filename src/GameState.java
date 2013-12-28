@@ -28,11 +28,16 @@ public abstract class GameState {
     /**
      * Get the result from the perspective of the given player.
      */
-    public abstract int getResult(int playerNum);
+    public abstract double getResult(int playerNum);
 
     /**
      * Return a string representation of the game state.
      */
     public abstract String toString();
+
+    /**
+     * Return the player number that just moved
+     */
+    public abstract int getPlayerJustMoved();
 
 }

@@ -49,15 +49,21 @@ public class NimState extends GameState {
         return moves.get(generator.nextInt(moves.size()));
     }
 
+    public void rollOut(){
+        while(!getLegalMoves().isEmpty()){
+            doMove(getRandomMove());
+        }
+    }
+
     /**
      * Get the result from the perspective of the given player.
      */
-    public int getResult(int playerNum){
+    public double getResult(int playerNum){
         assert numChips == 0;
         if(playerJustMoved == playerNum){
-            return 1;
+            return 1.0;
         } else {
-            return 0;
+            return 0.0;
         }
     }
 
