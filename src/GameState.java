@@ -18,7 +18,7 @@ public abstract class GameState {
     /**
      * Get a list of legal moves.
      */
-    public abstract List getLegalMoves();
+    public abstract List<GameMove> getLegalMoves();
 
     /**
      * Get a list of legal moves.
@@ -34,6 +34,11 @@ public abstract class GameState {
      * Return a string representation of the game state.
      */
     public abstract String toString();
+
+    /**
+     * Keep playing random moves until end is reached
+     */
+    public abstract void rollOut();
 
     /**
      * Return the player number that just moved

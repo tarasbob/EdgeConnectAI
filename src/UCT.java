@@ -4,9 +4,9 @@ public class UCT {
      * Conduct a UCT search for maxIter iterations starting from root state.
      * return the best move from root state.
      */
-    public static findMove(GameState rootState, int maxIter){
+    public static GameMove findMove(GameState rootState, int maxIter){
 
-        Node rootNode = (null, null, rootState);
+        Node rootNode = new Node(null, null, rootState);
         Node curNode;
         GameState curState;
 
@@ -28,7 +28,7 @@ public class UCT {
 
             //Backpropagate
             while(curNode != null){
-                curNode.update(curState.GetResult(curNode.getPlayerJustMoved()));
+                curNode.update(curState.getResult(curNode.getPlayerJustMoved()));
                 curNode = curNode.getParent();
             }
         }

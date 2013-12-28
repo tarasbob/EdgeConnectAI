@@ -1,3 +1,5 @@
+import java.util.*;
+
 /**
  * A node in the game tree. Wins are always from the perspective of playerJustMoved.
  */
@@ -16,13 +18,13 @@ public class Node{
 
     private double UCTK = 1.0;
 
-    public Node(GameMove move, Node parent, GamesState state){
+    public Node(GameMove move, Node parent, GameState state){
         this.move = move;
         this.parent = parent;
         childNodes = new ArrayList<Node>();
         wins = 0;
         visits = 0;
-        untriedMoves = state.getLegalMoves();
+        untriedMoves = (List<GameMove>)state.getLegalMoves();
         playerJustMoved = state.getPlayerJustMoved();
         generator = new Random();
     }
@@ -45,11 +47,15 @@ public class Node{
         return maxChild;
     }
 
+    public int getPlayerJustMoved(){
+        return playerJustMoved;
+    }
+
     public GameState expand(GameState state){
         if(!untriedMoves.isEmpty()){
             GameMove m = untriedMoves.get(generator.nextInt(untriedMoves.size()));
             state.doMove(m);
-            addChild(m, state){
+            addChild(m, state);
         }
         return state;
     }
@@ -96,7 +102,9 @@ public class Node{
      */
     public Node addChild(GameMove move, GameState state){
         untriedMoves.remove(move);
-        childNodes.add(newNode(move, this, state));
+        Node child = new Node(move, this, state);
+        childNodes.add(child);
+        return child;
     }
 
     /**

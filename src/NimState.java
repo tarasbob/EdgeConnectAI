@@ -33,8 +33,8 @@ public class NimState extends GameState {
     /**
      * Get a list of legal moves.
      */
-    public List<NimMove> getLegalMoves(){
-        List<NimMove> moves = new ArrayList<NimMove>();
+    public List<GameMove> getLegalMoves(){
+        List<GameMove> moves = new ArrayList<GameMove>();
         for(int i = 0; i < Math.min(3, numChips); i++){
             moves.add(new NimMove(i));
         }
@@ -44,8 +44,8 @@ public class NimState extends GameState {
     /**
      * Get a list of legal moves.
      */
-    public NimMove getRandomMove(){
-        List<NimMove> moves = getLegalMoves();
+    public GameMove getRandomMove(){
+        List<GameMove> moves = getLegalMoves();
         return moves.get(generator.nextInt(moves.size()));
     }
 
@@ -53,6 +53,10 @@ public class NimState extends GameState {
         while(!getLegalMoves().isEmpty()){
             doMove(getRandomMove());
         }
+    }
+
+    public int getPlayerJustMoved(){
+        return playerJustMoved;
     }
 
     /**
