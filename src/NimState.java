@@ -25,9 +25,11 @@ public class NimState extends GameState {
      * Update the state by carrying out the given move.
      */
     public void doMove(GameMove move){
-        numChips -= ((NimMove)move).getNumChips();
-        playerJustMoved = 3 - playerJustMoved;
+        int numMoveChips = ((NimMove)move).getNumChips();
         assert numChips >= 0;
+        assert numMoveChips > 0 && numMoveChips < 4;
+        numChips -= numMoveChips;
+        playerJustMoved = 3 - playerJustMoved;
     }
 
     /**
@@ -35,7 +37,7 @@ public class NimState extends GameState {
      */
     public List<GameMove> getLegalMoves(){
         List<GameMove> moves = new ArrayList<GameMove>();
-        for(int i = 0; i < Math.min(3, numChips); i++){
+        for(int i = 1; i <= Math.min(3, numChips); i++){
             moves.add(new NimMove(i));
         }
         return moves;
@@ -46,7 +48,8 @@ public class NimState extends GameState {
      */
     public GameMove getRandomMove(){
         List<GameMove> moves = getLegalMoves();
-        return moves.get(generator.nextInt(moves.size()));
+        GameMove move = moves.get(generator.nextInt(moves.size()));
+        return move;
     }
 
     public void rollOut(){

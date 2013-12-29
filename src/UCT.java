@@ -1,3 +1,5 @@
+import java.util.*;
+
 public class UCT {
 
     /*
@@ -9,6 +11,7 @@ public class UCT {
         Node rootNode = new Node(null, null, rootState);
         Node curNode;
         GameState curState;
+        Random generator = new Random();
 
         for(int i = 0; i < maxIter; i++){
             curNode = rootNode;
@@ -21,7 +24,12 @@ public class UCT {
             }
 
             //Expand
-            curState = curNode.expand(curState);
+            if(!curNode.getUntriedMoves().isEmpty()){
+                int randomIndex = generator.nextInt(curNode.getUntriedMoves().size());
+                GameMove m = curNode.getUntriedMoves().get(randomIndex);
+                curState.doMove(m);
+                curNode = curNode.addChild(m, curState);
+            }
 
             //Rollout
             curState.rollOut();
@@ -36,5 +44,6 @@ public class UCT {
         return rootNode.getMostVisitedChild().getMove();
 
     }
+
 
 }

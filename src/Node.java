@@ -22,13 +22,12 @@ public class Node{
         this.move = move;
         this.parent = parent;
         childNodes = new ArrayList<Node>();
-        wins = 0;
+        wins = 0.0;
         visits = 0;
         untriedMoves = (List<GameMove>)state.getLegalMoves();
         playerJustMoved = state.getPlayerJustMoved();
         generator = new Random();
     }
-
 
     /**
      * Use the UCB1 formula to select a child node.
@@ -51,14 +50,17 @@ public class Node{
         return playerJustMoved;
     }
 
+    /*
     public GameState expand(GameState state){
         if(!untriedMoves.isEmpty()){
-            GameMove m = untriedMoves.get(generator.nextInt(untriedMoves.size()));
+            int randomIndex = generator.nextInt(untriedMoves.size());
+            GameMove m = untriedMoves.get(randomIndex);
             state.doMove(m);
             addChild(m, state);
         }
         return state;
     }
+    */
 
     public Node getMostVisitedChild(){
         Node maxChild = childNodes.get(0);
@@ -85,7 +87,8 @@ public class Node{
     }
 
     public double getRating(){
-        return wins/visits + UCTK * Math.sqrt(2*Math.log(parent.getVisits())/visits);
+        double rating = wins/visits + UCTK * Math.sqrt(2*Math.log(parent.getVisits())/visits);
+        return rating;
     }
 
     public int getVisits(){
@@ -101,7 +104,7 @@ public class Node{
      * Return the added child node
      */
     public Node addChild(GameMove move, GameState state){
-        untriedMoves.remove(move);
+        assert untriedMoves.remove(move) == true;
         Node child = new Node(move, this, state);
         childNodes.add(child);
         return child;
