@@ -41,7 +41,15 @@ public class EdgeConnectState extends GameState {
             return state;
         }
 
-        public int setState(int state){
+        public void toggleScoreState(){
+            assert scoreState != 0;
+            scoreState = 3 - scoreState;
+        }
+        public CellCoordinate getCoord(){
+            return coord;
+        }
+
+        public void setState(int state){
             this.state = state;
         }
 
@@ -49,28 +57,28 @@ public class EdgeConnectState extends GameState {
             return group;
         }
 
-        public int setGroup(int group){
-            self.group = group;
+        public void setGroup(int group){
+            this.group = group;
         }
 
         public int getScoreState(){
             return scoreState;
         }
 
-        public int setScoreState(int scoreState){
+        public void setScoreState(int scoreState){
             this.scoreState = scoreState;
         }
 
-        public void setBonus(){
-            bonus = true;
+        public void setBonus(boolean bonus){
+            this.bonus = bonus;
         }
 
         public boolean isEdge(){
             return edge;
         }
 
-        public void setEdge(){
-            edge = true;
+        public void setEdge(boolean edge){
+            this.edge = edge;
         }
     }
 
@@ -87,17 +95,18 @@ public class EdgeConnectState extends GameState {
         for(int i = -boardSize; i <= boardSize; i++){
             for(int j = -boardSize; j <= boardSize; j++){
                 int k = -i - j;
-                if((k <= boardSize && k >= -boardSize) && !(i == 0 && j == 0){
-                    Cell c = new Cell(i, j, k);
-                    if(Math.max(Math.abs(i), Math.abs(j), Math.abs(k)) == boardSize){
-                        c.setEdge();
+                if((k <= boardSize && k >= -boardSize) && !(i == 0 && j == 0)){
+                    CellCoordinate coord = new CellCoordinate(i, j, k);
+                    Cell cell = new Cell(coord);
+                    if(Math.max(Math.abs(i), Math.max(Math.abs(j), Math.abs(k))) == boardSize){
+                        cell.setEdge(true);
                     }
-                    cellMap.put(new CellCoordinate(i, j, k), c);
+                    cellMap.put(coord, cell);
                 }
             }
         }
         for(CellCoordinate bonusCell : bonusCells){
-            cellMap.get(bonusCell).setBonus();
+            cellMap.get(bonusCell).setBonus(true);
         }
         playerJustMoved = 1;
         movesLeft = 1;
@@ -116,9 +125,9 @@ public class EdgeConnectState extends GameState {
     public List<Cell> getNeighbors(CellCoordinate coord){
         List<Cell> result = new ArrayList<Cell>();
         List<CellCoordinate> initList = coord.getNeighbors();
-        for(Cell Coordinate c : initList){
-            if(CellMap.containsKey(c)){
-                result.add(CellMap.get(c));
+        for(CellCoordinate c : initList){
+            if(cellMap.containsKey(c)){
+                result.add(cellMap.get(c));
             }
         }
         return result;
@@ -128,20 +137,21 @@ public class EdgeConnectState extends GameState {
      * Create a deep clone of this game state.
      */
     public GameState clone(){
-        return new EdgeConnectState(boardSize, cellMap, playerJustMoved);
+        return new EdgeConnectState(boardSize, cellMap, playerJustMoved, movesLeft);
     }
 
     /**
      * Update the state by carrying out the given move.
      */
-    public void doMove(GameMove move);
-        assert cellMap.get(move.getCoord()).getState() == 0;
+    public void doMove(GameMove move){
+        EdgeConnectMove eMove = (EdgeConnectMove)move;
+        assert cellMap.get(eMove.getCoord()).getState() == 0;
 
         if(movesLeft == 0){
             playerJustMoved = 3 - playerJustMoved;
             movesLeft = 2;
         }
-        cellMap.get(move.getCoord()).setState(playerJustMoved);
+        cellMap.get(eMove.getCoord()).setState(playerJustMoved);
         movesLeft -= 1;
     }
 
@@ -152,7 +162,7 @@ public class EdgeConnectState extends GameState {
         List<GameMove> legalMoves = new ArrayList<GameMove>();
         for(CellCoordinate coord : cellMap.keySet()){
             if(cellMap.get(coord).getState() == 0){
-                legalMoves.put(new EdgeConnectMove(coord));
+                legalMoves.add(new EdgeConnectMove(coord));
             }
 
         }
@@ -166,8 +176,30 @@ public class EdgeConnectState extends GameState {
 
     public GameMove getRandomMove(){
         List<GameMove> possibleMoves = getLegalMoves();
-        GameMove move = moves.get(generator.nextInt(moves.size()));
+        GameMove move = possibleMoves.get(generator.nextInt(possibleMoves.size()));
         return move;
+    }
+
+    public void floodFill(Cell startCell){
+        int scoreState = startCell.getScoreState();
+        int groupNum = startCell.getGroup();
+        CellCoordinate coord = startCell.getCoord();
+        Stack<CellCoordinate> stack = new Stack<CellCoordinate>();
+        stack.push(coord);
+        while(!stack.empty()){
+            coord = stack.pop();
+            //unchecked neighbors
+            List<CellCoordinate> neighbors = coord.getNeighbors();
+            for(CellCoordinate neighbor : neighbors){
+                if(cellMap.containsKey(neighbor)){ //if such cell exists
+                    Cell cell = cellMap.get(neighbor);
+                    if(cell.getGroup() == -1 && cell.getScoreState() == scoreState){
+                        cell.setGroup(groupNum);
+                        stack.push(neighbor);
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -189,11 +221,13 @@ public class EdgeConnectState extends GameState {
         while(!done && iterations < 1000){
             done = true;
             iterations += 1;
-            int[] numGroups = {0, 0, 0};
+            numGroups[0] = 0;
+            numGroups[1] = 0;
+            numGroups[2] = 0;
             for(Cell cell : cellMap.values()){
                 cell.setGroup(-1);
             }
-            for(Cell c : cellMap.values()){
+            for(Cell cell : cellMap.values()){
                 if(cell.group == -1){
                     cell.setGroup(numGroups[cell.getScoreState()]);
                     floodFill(cell);
@@ -209,13 +243,13 @@ public class EdgeConnectState extends GameState {
                 numEdgeNodes[2][i] = 0;
             }
 
-            for(Cell c : cellMap.values()){
+            for(Cell cell : cellMap.values()){
                 if(cell.isEdge()){
                     numEdgeNodes[cell.getScoreState()][cell.getGroup()] += 1;
                 }
             }
 
-            for(Cell c : cellMap.values()){
+            for(Cell cell : cellMap.values()){
                 if(numEdgeNodes[cell.getScoreState()][cell.getGroup()] < 2){
                     cell.toggleScoreState();
                     done = false;
@@ -227,11 +261,11 @@ public class EdgeConnectState extends GameState {
         int[] numEdges = {0, 0, 0};
         int[] numBonus = {0, 0, 0};
 
-        for(Cell c : cellMap.values()){
-            if(c.isEdge())
-                numEdges[c.getScoreState()] += 1;
-            if(c.isBonus())
-                numBonus[c.getScoreState()] += 1;
+        for(Cell cell : cellMap.values()){
+            if(cell.isEdge())
+                numEdges[cell.getScoreState()] += 1;
+            if(cell.isBonus())
+                numBonus[cell.getScoreState()] += 1;
         }
         
     

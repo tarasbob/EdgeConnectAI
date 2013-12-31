@@ -1,3 +1,5 @@
+import java.util.*;
+
 public class CellCoordinate implements Comparable<CellCoordinate> {
     public final int x;
     public final int y;
@@ -16,7 +18,7 @@ public class CellCoordinate implements Comparable<CellCoordinate> {
         return this.x == c.x && this.y == c.y && this.z == c.z;
     }
 
-    @override public int compareTo(CellCoordinate other){
+    public int compareTo(CellCoordinate other){
         if(this.x > other.getX()) return 1;
         if(this.x < other.getX()) return -1;
         if(this.y > other.getY()) return 1;
@@ -26,13 +28,13 @@ public class CellCoordinate implements Comparable<CellCoordinate> {
         return 0;
     }
 
-    public inx getX(){
+    public int getX(){
         return x;
     }
-    public inx getY(){
+    public int getY(){
         return y;
     }
-    public inx getZ(){
+    public int getZ(){
         return z;
     }
 
@@ -42,7 +44,7 @@ public class CellCoordinate implements Comparable<CellCoordinate> {
 
     public List<CellCoordinate> getNeighbors(){
         List<CellCoordinate> result = new ArrayList<CellCoordinate>();
-        if(Math.max(Math.abs(x), Math.abs(y), Math.abs(z)) == 1){
+        if(Math.max(Math.abs(x), Math.max(Math.abs(y), Math.abs(z))) == 1){
             if(x == -1 && y == 1 && z == 0){
                 result.add(new CellCoordinate(1, -1, 0));
                 result.add(new CellCoordinate(-1, 0, 1));
