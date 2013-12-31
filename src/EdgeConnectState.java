@@ -5,104 +5,6 @@ import java.util.*;
  */
 public class EdgeConnectState extends GameState {
 
-    private class CellCoordinate {
-        public final int x;
-        public final int y;
-        public final int z;
-
-        public CellCoordinate(int x, int y, int z){
-            assert x + y + z == 0;
-            this.x = x;
-            this.y = y;
-            this.z = z;
-        }
-
-        public boolean equals(CellCoordinate c){
-            if (c == null) return false;
-            if (c == this) return true;
-            return this.x == c.x && this.y == c.y && this.z == c.z;
-        }
-
-        public int hashCode(){
-            return (x+20) + (y+20) * 40 + (z+20) * 1600;
-        }
-
-        public List<CellCoordinate> getNeighbors(){
-            List<CellCoordinate> result = new ArrayList<CellCoordinate>();
-            if(Math.max(Math.abs(x), Math.abs(y), Math.abs(z)) == 1){
-                if(x == -1 && y == 1 && z == 0){
-                    result.add(new CellCoordinate(1, -1, 0));
-                    result.add(new CellCoordinate(-1, 0, 1));
-                    result.add(new CellCoordinate(1, 0, -1));
-                    result.add(new CellCoordinate(0, -1, 1));
-                    result.add(new CellCoordinate(0, 1, -1));
-
-                    result.add(new CellCoordinate(-2, 2, 0));
-                    result.add(new CellCoordinate(-2, 1, 1));
-                    result.add(new CellCoordinate(-1, 2, -1));
-                } else if(x == 1 && y == -1 && z == 0){
-                    result.add(new CellCoordinate(-1, 1, 0));
-                    result.add(new CellCoordinate(-1, 0, 1));
-                    result.add(new CellCoordinate(1, 0, -1));
-                    result.add(new CellCoordinate(0, -1, 1));
-                    result.add(new CellCoordinate(0, 1, -1));
-
-                    result.add(new CellCoordinate(2, -2, 0));
-                    result.add(new CellCoordinate(2, -1, -1));
-                    result.add(new CellCoordinate(1, -2, 1));
-                } else if(x == -1 && y == 0 && z == 1){
-                    result.add(new CellCoordinate(1, -1, 0));
-                    result.add(new CellCoordinate(-1, 0, 1));
-                    result.add(new CellCoordinate(1, 0, -1));
-                    result.add(new CellCoordinate(0, -1, 1));
-                    result.add(new CellCoordinate(0, 1, -1));
-
-                    result.add(new CellCoordinate(-2, 1, 1));
-                    result.add(new CellCoordinate(-2, 0, 2));
-                    result.add(new CellCoordinate(-1, -1, 2));
-                } else if(x == 1 && y == 0 && z == -1){
-                    result.add(new CellCoordinate(-1, 1, 0));
-                    result.add(new CellCoordinate(-1, 0, 1));
-                    result.add(new CellCoordinate(1, 0, -1));
-                    result.add(new CellCoordinate(0, -1, 1));
-                    result.add(new CellCoordinate(0, 1, -1));
-
-                    result.add(new CellCoordinate(2, -1, -1));
-                    result.add(new CellCoordinate(2, 0, -2));
-                    result.add(new CellCoordinate(1, 1, -2));
-                } else if(x == 0 && y == -1 && z == 1){
-                    result.add(new CellCoordinate(-1, 1, 0));
-                    result.add(new CellCoordinate(1, -1, 0));
-                    result.add(new CellCoordinate(-1, 0, 1));
-                    result.add(new CellCoordinate(1, 0, -1));
-                    result.add(new CellCoordinate(0, 1, -1));
-
-                    result.add(new CellCoordinate(1, -2, 1));
-                    result.add(new CellCoordinate(-1, -1, 2));
-                    result.add(new CellCoordinate(0, -2, 2));
-                } else if(x == 0 && y == 1 && z == -1){
-                    result.add(new CellCoordinate(-1, 1, 0));
-                    result.add(new CellCoordinate(1, -1, 0));
-                    result.add(new CellCoordinate(-1, 0, 1));
-                    result.add(new CellCoordinate(1, 0, -1));
-                    result.add(new CellCoordinate(0, -1, 1));
-
-                    result.add(new CellCoordinate(-1, 2, -1));
-                    result.add(new CellCoordinate(1, 1, -2));
-                    result.add(new CellCoordinate(0, 2, -2));
-                }
-            } else {
-                result.add(new CellCoordinate(x-1, y+1, z));
-                result.add(new CellCoordinate(x+1, y-1, z));
-                result.add(new CellCoordinate(x-1, y, z+1));
-                result.add(new CellCoordinate(x+1, y, z-1));
-                result.add(new CellCoordinate(x, y-1, z+1));
-                result.add(new CellCoordinate(x, y+1, z-1));
-            }
-            return result;
-        }
-    }
-
     private class Cell {
 
         private CellCoordinate coord;
@@ -125,6 +27,14 @@ public class EdgeConnectState extends GameState {
 
         public boolean isBonus(){
             return bonus;
+        }
+
+        public Cell clone(){
+            Cell result = new Cell(coord);
+            result.setEdge(edge);
+            result.setBonus(bonus);
+            result.setState(state);
+            return result;
         }
 
         public int getState(){
@@ -166,8 +76,12 @@ public class EdgeConnectState extends GameState {
 
     private Map<CellCoordinate, Cell> cellMap;
     private int boardSize;
+    private int playerJustMoved;
+    private int movesLeft;
 
-    public EdgeConnectState(int boardSize){
+    Random generator = new Random();
+
+    public EdgeConnectState(int boardSize, List<CellCoordinate> bonusCells){
         cellMap = new HashMap<CellCoordinate, Cell>();
         this.boardSize = boardSize;
         for(int i = -boardSize; i <= boardSize; i++){
@@ -178,12 +92,25 @@ public class EdgeConnectState extends GameState {
                     if(Math.max(Math.abs(i), Math.abs(j), Math.abs(k)) == boardSize){
                         c.setEdge();
                     }
-
                     cellMap.put(new CellCoordinate(i, j, k), c);
                 }
-
             }
         }
+        for(CellCoordinate bonusCell : bonusCells){
+            cellMap.get(bonusCell).setBonus();
+        }
+        playerJustMoved = 1;
+        movesLeft = 1;
+    }
+
+    public EdgeConnectState(int boardSize, Map<CellCoordinate, Cell> newMap, int playerJustMoved, int movesLeft){
+        cellMap = new HashMap<CellCoordinate, Cell>();
+        this.boardSize = boardSize;
+        for(CellCoordinate coord : newMap.keySet()){
+            cellMap.put(coord, newMap.get(coord).clone());
+        }
+        this.playerJustMoved = playerJustMoved;
+        this.movesLeft = movesLeft;
     }
 
     public List<Cell> getNeighbors(CellCoordinate coord){
@@ -197,32 +124,51 @@ public class EdgeConnectState extends GameState {
         return result;
     }
 
-    public void setBonus(List<CellCoordinate> bonusCells){
-        for(CellCoordinate bonusCell : bonusCells){
-            cellMap.get(bonusCell).setBonus();
-        }
-    }
-
-    
     /**
      * Create a deep clone of this game state.
      */
-    public abstract GameState clone();
+    public GameState clone(){
+        return new EdgeConnectState(boardSize, cellMap, playerJustMoved);
+    }
 
     /**
      * Update the state by carrying out the given move.
      */
-    public abstract void doMove(GameMove move);
+    public void doMove(GameMove move);
+        assert cellMap.get(move.getCoord()).getState() == 0;
+
+        if(movesLeft == 0){
+            playerJustMoved = 3 - playerJustMoved;
+            movesLeft = 2;
+        }
+        cellMap.get(move.getCoord()).setState(playerJustMoved);
+        movesLeft -= 1;
+    }
 
     /**
      * Get a list of legal moves.
      */
-    public abstract List<GameMove> getLegalMoves();
+    public List<GameMove> getLegalMoves(){
+        List<GameMove> legalMoves = new ArrayList<GameMove>();
+        for(CellCoordinate coord : cellMap.keySet()){
+            if(cellMap.get(coord).getState() == 0){
+                legalMoves.put(new EdgeConnectMove(coord));
+            }
+
+        }
+
+        return legalMoves;
+    }
 
     /**
      * Get a list of legal moves.
      */
-    public abstract GameMove getRandomMove();
+
+    public GameMove getRandomMove(){
+        List<GameMove> possibleMoves = getLegalMoves();
+        GameMove move = moves.get(generator.nextInt(moves.size()));
+        return move;
+    }
 
     /**
      * Get the result from the perspective of the given player.
@@ -276,23 +222,67 @@ public class EdgeConnectState extends GameState {
                 }
             }
         }
+        assert done;
 
+        int[] numEdges = {0, 0, 0};
+        int[] numBonus = {0, 0, 0};
+
+        for(Cell c : cellMap.values()){
+            if(c.isEdge())
+                numEdges[c.getScoreState()] += 1;
+            if(c.isBonus())
+                numBonus[c.getScoreState()] += 1;
+        }
+        
+    
+        //This could be rewritten to calculate only p1Score, and figure out P2 score by sutracting from max score
+        int p1Score = numEdges[1] + (numGroups[2] - numGroups[1])*2;
+        int p2Score = numEdges[2] + (numGroups[1] - numGroups[2])*2;
+        if(numBonus[1] > numBonus[2]){
+            p1Score += 1;
+        } else {
+            p2Score += 1;
+        }
+
+        assert p1Score + p2Score == boardSize * 6 + 1;
+
+        if(playerNum == 1){
+            if(p1Score > p2Score){
+                return 1.0;
+            } else {
+                return 0.0;
+            }
+        } else {
+            if(p1Score > p2Score){
+                return 0.0;
+            } else {
+                return 1.0;
+            }
+        }
     }
 
 
     /**
      * Return a string representation of the game state.
      */
-    public abstract String toString();
+    public String toString(){
+        return "";
+    }
 
     /**
      * Keep playing random moves until end is reached
      */
-    public abstract void rollOut();
+    public void rollOut(){
+        while(!getLegalMoves().isEmpty()){
+            doMove(getRandomMove());
+        }
+    }
 
     /**
      * Return the player number that just moved
      */
-    public abstract int getPlayerJustMoved();
+    public int getPlayerJustMoved(){
+        return playerJustMoved;
+    }
 
 }
